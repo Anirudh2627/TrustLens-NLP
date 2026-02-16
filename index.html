@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustLens NLP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ===== RESET ===== */
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #050510;
+            color: #e2e8f0;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-wrapper {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .gradient-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .sphere-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(99,102,241,0.35), transparent 70%);
+            top: -250px; right: -150px;
+            animation: floatSphere 18s ease-in-out infinite;
+        }
+
+        .sphere-2 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(139,92,246,0.3), transparent 70%);
+            bottom: -200px; left: -150px;
+            animation: floatSphere 22s ease-in-out infinite reverse;
+        }
+
+        .sphere-3 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(6,182,212,0.2), transparent 70%);
+            top: 40%; left: 40%;
+            animation: floatSphere 25s ease-in-out infinite 3s;
+        }
+
+        .sphere-4 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(244,114,182,0.2), transparent 70%);
+            top: 20%; left: 10%;
+            animation: floatSphere 20s ease-in-out infinite 5s;
+        }
+
+        @keyframes floatSphere {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(60px, -50px) scale(1.1); }
+            50% { transform: translate(-40px, 40px) scale(0.9); }
+            75% { transform: translate(50px, 60px) scale(1.05); }
+        }
+
+        /* Grid overlay */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: rgba(129, 140, 248, 0.6);
+            border-radius: 50%;
+            animation: particleFloat linear infinite;
+        }
+
+        .particle:nth-child(1) { left:10%; animation-duration:12s; animation-delay:0s; }
+        .particle:nth-child(2) { left:20%; animation-duration:15s; animation-delay:2s; width:2px; height:2px; }
+        .particle:nth-child(3) { left:35%; animation-duration:18s; animation-delay:4s; }
+        .particle:nth-child(4) { left:50%; animation-duration:14s; animation-delay:1s; width:4px; height:4px; }
+        .particle:nth-child(5) { left:65%; animation-duration:16s; animation-delay:3s; }
+        .particle:nth-child(6) { left:75%; animation-duration:13s; animation-delay:5s; width:2px; height:2px; }
+        .particle:nth-child(7) { left:85%; animation-duration:17s; animation-delay:2s; }
+        .particle:nth-child(8) { left:45%; animation-duration:20s; animation-delay:6s; width:2px; height:2px; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) rotate(0deg); opacity:0; }
+            10% { opacity:1; }
+            90% { opacity:1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity:0; }
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 14px 32px;
+            background: rgba(5, 5, 16, 0.7);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(5, 5, 16, 0.9);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+        }
+
+        .nav-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+        }
+
+        .brand-name {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-name .ai {
+            background: linear-gradient(135deg, #818cf8, #e879f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-pills {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-pill {
+            font-size: 0.7rem;
+            padding: 5px 14px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 160px 24px 70px;
+        }
+
+        .hero-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 20px 7px 14px;
+            border-radius: 50px;
+            background: rgba(99,102,241,0.08);
+            border: 1px solid rgba(99,102,241,0.2);
+            font-size: 0.8rem;
+            color: #a5b4fc;
+            font-weight: 500;
+            margin-bottom: 28px;
+            animation: fadeDown 0.8s ease;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 10px rgba(52,211,153,0.5);
+            animation: dotPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes dotPulse {
+            0%,100% { box-shadow: 0 0 5px rgba(52,211,153,0.3); }
+            50% { box-shadow: 0 0 15px rgba(52,211,153,0.6); }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 7vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            animation: fadeDown 0.8s ease 0.1s both;
+        }
+
+        .hero h1 .glow-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 40%, #f0abfc 70%, #818cf8 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: #94a3b8;
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-weight: 400;
+            animation: fadeDown 0.8s ease 0.2s both;
+        }
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== MAIN ===== */
+        .main-app {
+            position: relative;
+            z-index: 1;
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ===== GLASS CARD ===== */
+        .gcard {
+            background: rgba(255,255,255,0.025);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 24px;
+            padding: 36px;
+            margin-bottom: 24px;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .gcard:hover {
+            border-color: rgba(255,255,255,0.12);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+        }
+
+        /* ===== INPUT SECTION ===== */
+        .input-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .input-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15));
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #818cf8;
+            flex-shrink: 0;
+        }
+
+        .input-header h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .input-header span {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            display: block;
+            margin-top: 3px;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.35);
+            border: 1.5px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 20px;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            resize: vertical;
+            min-height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.12), 0 0 30px rgba(99,102,241,0.08);
+            background: rgba(0,0,0,0.45);
+        }
+
+        textarea::placeholder { color: #4b5563; }
+
+        .textarea-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 0 4px;
+        }
+
+        .word-counter { font-size: 0.73rem; color: #4b5563; transition: color 0.3s; }
+        .word-counter.active { color: #64748b; }
+
+        .kbd-hint {
+            font-size: 0.7rem;
+            color: #4b5563;
+            background: rgba(255,255,255,0.03);
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0 20px;
+        }
+
+        .btn-main {
+            flex: 1;
+            padding: 17px 32px;
+            background: linear-gradient(135deg, #6366f1, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-main::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 50px rgba(99,102,241,0.4), 0 0 20px rgba(99,102,241,0.15);
+        }
+
+        .btn-main:hover::after { opacity: 1; }
+        .btn-main:active { transform: translateY(-1px); }
+        .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .btn-main > * { position: relative; z-index: 1; }
+
+        .btn-reset {
+            padding: 17px 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            color: #94a3b8;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.15);
+            color: #e2e8f0;
+        }
+
+        /* ===== SAMPLE CHIPS ===== */
+        .samples {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .samples-label {
+            font-size: 0.78rem;
+            color: #4b5563;
+            font-weight: 600;
+        }
+
+        .sample-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 50px;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sample-chip:hover {
+            border-color: rgba(99,102,241,0.4);
+            color: #a5b4fc;
+            background: rgba(99,102,241,0.06);
+            transform: translateY(-1px);
+        }
+
+        .sdot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+        }
+
+        .sdot.red { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.4); }
+        .sdot.green { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.4); }
+
+        /* ===== LOADING ===== */
+        .loader-section { margin-top: 24px; }
+
+        .loader-card {
+            text-align: center;
+            padding: 52px 36px;
+        }
+
+        .brain-anim {
+            width: 90px; height: 90px;
+            margin: 0 auto 28px;
+            position: relative;
+        }
+
+        .brain-core {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px rgba(99,102,241,0.4);
+            animation: brainPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes brainPulse {
+            0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+            50% { box-shadow: 0 0 40px rgba(99,102,241,0.6); }
+        }
+
+        .ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(99,102,241,0.3);
+            animation: ringExpand 2s ease-out infinite;
+        }
+
+        .ring:nth-child(2) { animation-delay: 0.6s; }
+        .ring:nth-child(3) { animation-delay: 1.2s; }
+
+        @keyframes ringExpand {
+            0% { transform: scale(0.7); opacity: 0.8; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .loader-card h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .loader-card > p {
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+
+        .load-steps {
+            margin-top: 32px;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .lstep {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.82rem;
+            color: #4b5563;
+            padding: 9px 18px;
+            border-radius: 10px;
+            transition: all 0.4s ease;
+        }
+
+        .lstep.done {
+            color: #34d399;
+            background: rgba(52,211,153,0.08);
+        }
+
+        .lstep.working {
+            color: #818cf8;
+            background: rgba(99,102,241,0.08);
+        }
+
+        /* ===== RESULTS ===== */
+        .results { margin-top: 24px; }
+
+        /* Verdict */
+        .verdict {
+            text-align: center;
+            padding: 52px 36px;
+            animation: resultPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes resultPop {
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .verdict.is-genuine {
+            border-color: rgba(52,211,153,0.2);
+            box-shadow: 0 0 80px rgba(52,211,153,0.06), inset 0 1px 0 rgba(52,211,153,0.1);
+        }
+
+        .verdict.is-fake {
+            border-color: rgba(248,113,113,0.2);
+            box-shadow: 0 0 80px rgba(248,113,113,0.06), inset 0 1px 0 rgba(248,113,113,0.1);
+        }
+
+        .verdict-emoji {
+            width: 88px; height: 88px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            animation: emojiBounce 0.6s cubic-bezier(0.175,0.885,0.32,1.275) 0.2s both;
+        }
+
+        .verdict.is-genuine .verdict-emoji {
+            background: rgba(52,211,153,0.1);
+            box-shadow: 0 0 40px rgba(52,211,153,0.1);
+        }
+
+        .verdict.is-fake .verdict-emoji {
+            background: rgba(248,113,113,0.1);
+            box-shadow: 0 0 40px rgba(248,113,113,0.1);
+        }
+
+        @keyframes emojiBounce {
+            0% { transform: scale(0) rotate(-10deg); }
+            60% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .verdict h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.8px;
+            margin-bottom: 10px;
+        }
+
+        .verdict.is-genuine h2 { color: #34d399; }
+        .verdict.is-fake h2 { color: #f87171; }
+
+        .verdict > p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            max-width: 400px;
+            margin: 0 auto 24px;
+            line-height: 1.6;
+        }
+
+        .conf-badge {
+            display: inline-flex;
+            padding: 9px 24px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .verdict.is-genuine .conf-badge {
+            background: rgba(52,211,153,0.1);
+            color: #34d399;
+            border: 1px solid rgba(52,211,153,0.2);
+        }
+
+        .verdict.is-fake .conf-badge {
+            background: rgba(248,113,113,0.1);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .stat-box:nth-child(2) { animation-delay: 0.1s; }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform: translateY(20px); }
+            to { opacity:1; transform: translateY(0); }
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 28px;
+        }
+
+        /* Gauge */
+        .gauge-wrap {
+            position: relative;
+            width: 170px; height: 170px;
+            margin: 0 auto;
+        }
+
+        .gauge-wrap svg {
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .g-track {
+            fill: none;
+            stroke: rgba(255,255,255,0.04);
+            stroke-width: 10;
+        }
+
+        .g-bar {
+            fill: none;
+            stroke: #818cf8;
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-dasharray: 408.41;
+            stroke-dashoffset: 408.41;
+            transition: stroke-dashoffset 1.8s cubic-bezier(0.4,0,0.2,1),
+                        stroke 0.5s ease;
+            filter: drop-shadow(0 0 8px rgba(99,102,241,0.4));
+        }
+
+        .g-val {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .g-num {
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        .g-pct {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        /* Probability */
+        .prob-section { padding-top: 10px; }
+
+        .prob-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prob-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .prob-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        .prob-dot.g { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.4); }
+        .prob-dot.f { background: #f87171; box-shadow: 0 0 8px rgba(248,113,113,0.4); }
+
+        .prob-num {
+            font-size: 0.95rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .prob-track {
+            height: 10px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 10px;
+            width: 0;
+            transition: width 1.8s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .prob-fill.gf {
+            background: linear-gradient(90deg, #34d399, #6ee7b7);
+            box-shadow: 0 0 10px rgba(52,211,153,0.3);
+        }
+
+        .prob-fill.ff {
+            background: linear-gradient(90deg, #f87171, #fca5a5);
+            box-shadow: 0 0 10px rgba(248,113,113,0.3);
+        }
+
+        /* ===== ANALYSIS ===== */
+        .analysis-box {
+            animation: fadeUp 0.5s ease 0.2s both;
+        }
+
+        .analysis-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .analysis-top h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .analysis-top h3 i { color: #818cf8; }
+
+        .metric-count {
+            font-size: 0.7rem;
+            padding: 5px 14px;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+        }
+
+        .m-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 14px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .m-item:hover {
+            border-color: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .m-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .m-icon.ic-green { background: rgba(52,211,153,0.12); color: #34d399; }
+        .m-icon.ic-red { background: rgba(248,113,113,0.12); color: #f87171; }
+        .m-icon.ic-blue { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .m-icon.ic-yellow { background: rgba(251,191,36,0.12); color: #fbbf24; }
+        .m-icon.ic-purple { background: rgba(192,132,252,0.12); color: #c084fc; }
+
+        .m-info h4 {
+            font-size: 0.68rem;
+            color: #4b5563;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .m-info p {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .how-section {
+            animation: fadeUp 0.5s ease 0.3s both;
+        }
+
+        .how-section h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .how-section h3 i { color: #fbbf24; }
+
+        .how-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .how-item {
+            text-align: center;
+            padding: 24px 14px;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+
+        .how-item:hover {
+            border-color: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+
+        .how-num {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            font-weight: 800;
+            margin: 0 auto 14px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        }
+
+        .how-item h4 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .how-item p {
+            font-size: 0.72rem;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 52px 24px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 40px;
+        }
+
+        .ft-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+        }
+
+        .ft-brand i {
+            color: #818cf8;
+        }
+
+        footer > p {
+            color: #4b5563;
+            font-size: 0.82rem;
+            margin-bottom: 18px;
+        }
+
+        .ft-stack {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ft-stack span {
+            font-size: 0.72rem;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+
+        .ft-stack span:hover {
+            border-color: rgba(99,102,241,0.3);
+            color: #94a3b8;
+        }
+
+        /* ===== UTILITY ===== */
+        .hidden { display: none !important; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.4rem; letter-spacing: -1px; }
+            .hero { padding: 130px 20px 50px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .how-grid { grid-template-columns: 1fr 1fr; }
+            .btn-row { flex-direction: column; }
+            .nav-pills { display: none; }
+            .gcard { padding: 24px; border-radius: 20px; }
+            .metrics-grid { grid-template-columns: 1fr; }
+            .samples { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 480px) {
+            .how-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2rem; }
+            .gcard { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="bg-wrapper">
+        <div class="gradient-sphere sphere-1"></div>
+        <div class="gradient-sphere sphere-2"></div>
+        <div class="gradient-sphere sphere-3"></div>
+        <div class="gradient-sphere sphere-4"></div>
+        <div class="grid-overlay"></div>
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <div class="brand-icon"><i class="fas fa-shield-halved"></i></div>
+                <span class="brand-name">TrustLens NLP<span class="ai">AI</span></span>
+            </div>
+            <div class="nav-pills">
+                <span class="nav-pill"><i class="fas fa-brain"></i> NLP Powered</span>
+                <span class="nav-pill"><i class="fas fa-microchip"></i> ML Engine</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-chip">
+            <span class="status-dot"></span>
+            AI-Powered Detection Engine
+        </div>
+        <h1>Detect <span class="glow-text">Fake Reviews</span><br>In Seconds.</h1>
+        <p>Advanced NLP and Machine Learning algorithms analyze review authenticity with precision. Paste any review and get instant results.</p>
+    </section>
+
+    <!-- App -->
+    <main class="main-app">
+
+        <!-- Input -->
+        <div class="gcard" id="inputCard">
+            <div class="input-header">
+                <div class="input-icon"><i class="fas fa-pen-fancy"></i></div>
+                <div>
+                    <h2>Analyze a Review</h2>
+                    <span>Paste any product review to verify its authenticity</span>
+                </div>
+            </div>
+
+            <textarea id="reviewInput" placeholder="Paste or type a product review here..." rows="5" spellcheck="false"></textarea>
+
+            <div class="textarea-meta">
+                <span class="word-counter" id="wordCounter"></span>
+                <span class="kbd-hint">Ctrl + Enter to analyze</span>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-main" id="analyzeBtn" onclick="analyzeReview()">
+                    <i class="fas fa-magnifying-glass-chart" id="btnIcon"></i>
+                    <span id="btnText">Analyze Review</span>
+                </button>
+                <button class="btn-reset" onclick="clearAll()">
+                    <i class="fas fa-arrow-rotate-left"></i> Reset
+                </button>
+            </div>
+
+            <div class="samples">
+                <span class="samples-label">Quick test:</span>
+                <button class="sample-chip" onclick="loadSample('fake')">
+                    <span class="sdot red"></span> Fake Review
+                </button>
+                <button class="sample-chip" onclick="loadSample('real')">
+                    <span class="sdot green"></span> Real Review
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingSection" class="loader-section hidden">
+            <div class="gcard loader-card">
+                <div class="brain-anim">
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="brain-core"><i class="fas fa-brain"></i></div>
+                </div>
+                <h3>Analyzing Review</h3>
+                <p>Running NLP pipeline & ML classification...</p>
+                <div class="load-steps">
+                    <div class="lstep done" id="ls1"><i class="fas fa-check-circle"></i> Text Preprocessing</div>
+                    <div class="lstep" id="ls2"><i class="far fa-circle"></i> Feature Extraction</div>
+                    <div class="lstep" id="ls3"><i class="far fa-circle"></i> ML Classification</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsSection" class="results hidden">
+
+            <!-- Verdict -->
+            <div class="gcard verdict" id="verdictCard">
+                <div class="verdict-emoji" id="vEmoji"></div>
+                <h2 id="vTitle"></h2>
+                <p id="vDesc"></p>
+                <div class="conf-badge" id="vBadge"></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="gcard stat-box">
+                    <div class="stat-label">Confidence Score</div>
+                    <div class="gauge-wrap">
+                        <svg viewBox="0 0 170 170">
+                            <circle class="g-track" cx="85" cy="85" r="65"/>
+                            <circle class="g-bar" id="gaugeBar" cx="85" cy="85" r="65"/>
+                        </svg>
+                        <div class="g-val">
+                            <span class="g-num" id="gaugeNum">0</span>
+                            <span class="g-pct">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gcard stat-box">
+                    <div class="stat-label">Probability Breakdown</div>
+                    <div class="prob-section">
+                        <div class="prob-row">
+                            <div class="prob-label"><span class="prob-dot g"></span> Genuine</div>
+                            <span class="prob-num" id="gPct">0%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div class="prob-fill gf" id="gBar"></div>
+                        </div>
+                        <div class="prob-row">
+                            <div class="prob-label"><span class="prob-dot f"></span> Fake</div>
+                            <span class="prob-num" id="fPct">0%</span>
+                        </div>
+                        <div class="prob-track">
+                            <div class="prob-fill ff" id="fBar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis -->
+            <div class="gcard analysis-box">
+                <div class="analysis-top">
+                    <h3><i class="fas fa-microscope"></i> Detailed Analysis</h3>
+                    <span class="metric-count">11 Metrics</span>
+                </div>
+                <div class="metrics-grid" id="metricsGrid"></div>
+            </div>
+
+            <!-- How -->
+            <div class="gcard how-section">
+                <h3><i class="fas fa-lightbulb"></i> How It Works</h3>
+                <div class="how-grid">
+                    <div class="how-item">
+                        <div class="how-num">1</div>
+                        <h4>Preprocessing</h4>
+                        <p>Tokenization, lemmatization & stopword removal via NLTK</p>
+                    </div>
+                    <div class="how-item">
+                        <div class="how-num">2</div>
+                        <h4>Feature Extraction</h4>
+                        <p>TF-IDF vectorization + 30 handcrafted NLP features</p>
+                    </div>
+                    <div class="how-item">
+                        <div class="how-num">3</div>
+                        <h4>ML Classification</h4>
+                        <p>Ensemble: Logistic Regression + Random Forest + Gradient Boosting</p>
+                    </div>
+                    <div class="how-item">
+                        <div class="how-num">4</div>
+                        <h4>Sentiment Analysis</h4>
+                        <p>TextBlob polarity & subjectivity scoring for deeper insight</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="ft-brand"><i class="fas fa-shield-halved"></i> TrustLens NLP</div>
+        <p>Built with Python · Flask · Scikit-Learn · NLTK · TextBlob</p>
+        <div class="ft-stack">
+            <span><i class="fab fa-python"></i> Python</span>
+            <span><i class="fas fa-flask-vial"></i> Flask</span>
+            <span><i class="fas fa-brain"></i> NLP</span>
+            <span><i class="fas fa-robot"></i> ML</span>
+            <span><i class="fas fa-code"></i> TF-IDF</span>
+        </div>
+    </footer>
+
+    <script>
+
+
+        const samples = {
+            fake: "At its core, this product is designed for maximum efficiency. I have found it to be instrumental in streamlining my morning routine. The engineering excellence is evident in every aspect. A truly transformative experience that has fundamentally changed my daily workflow. The craftsmanship speaks for itself and the attention to detail is unparalleled.",
+            real: "Decent product for the price. I've been using it for about two weeks now. The build quality is okay, nothing exceptional but it gets the job done. Shipping took a bit longer than expected, about 8 days. Battery lasts roughly 6 hours with moderate use. The instructions could be clearer. Overall, moderately satisfied."
+        };
+
+        function loadSample(type) {
+            const ta = document.getElementById('reviewInput');
+            ta.value = samples[type];
+            ta.style.borderColor = '#6366f1';
+            ta.style.boxShadow = '0 0 0 4px rgba(99,102,241,0.12), 0 0 30px rgba(99,102,241,0.08)';
+            setTimeout(() => { ta.style.borderColor = ''; ta.style.boxShadow = ''; }, 1200);
+            updateCounter();
+        }
+
+        function clearAll() {
+            document.getElementById('reviewInput').value = '';
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('loadingSection').classList.add('hidden');
+            updateCounter();
+            const gb = document.getElementById('gaugeBar');
+            if(gb) gb.style.strokeDashoffset = 408.41;
+            const gn = document.getElementById('gaugeNum');
+            if(gn) gn.textContent = '0';
+            ['gBar','fBar'].forEach(id => { const e=document.getElementById(id); if(e) e.style.width='0%'; });
+        }
+
+        function updateCounter() {
+            const ta = document.getElementById('reviewInput');
+            const c = document.getElementById('wordCounter');
+            const t = ta.value.trim();
+            if(t.length > 0) {
+                const w = t.split(/\s+/).filter(x=>x).length;
+                c.textContent = w + ' words · ' + t.length + ' chars';
+                c.classList.add('active');
+            } else {
+                c.textContent = '';
+                c.classList.remove('active');
+            }
+        }
+
+        function animateSteps() {
+            const s1=document.getElementById('ls1'), s2=document.getElementById('ls2'), s3=document.getElementById('ls3');
+            s1.className='lstep done'; s1.innerHTML='<i class="fas fa-check-circle"></i> Text Preprocessing';
+            s2.className='lstep'; s2.innerHTML='<i class="far fa-circle"></i> Feature Extraction';
+            s3.className='lstep'; s3.innerHTML='<i class="far fa-circle"></i> ML Classification';
+            setTimeout(()=>{ s2.className='lstep working'; s2.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> Feature Extraction'; },300);
+            setTimeout(()=>{ s2.className='lstep done'; s2.innerHTML='<i class="fas fa-check-circle"></i> Feature Extraction'; s3.className='lstep working'; s3.innerHTML='<i class="fas fa-circle-notch fa-spin"></i> ML Classification'; },700);
+            setTimeout(()=>{ s3.className='lstep done'; s3.innerHTML='<i class="fas fa-check-circle"></i> ML Classification'; },1100);
+        }
+
+        function animateNum(el, to, dur) {
+            const start = performance.now();
+            const tick = (now) => {
+                const p = Math.min((now-start)/dur, 1);
+                const e = 1 - Math.pow(1-p, 3);
+                el.textContent = Math.round(to * e);
+                if(p < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+
+        async function analyzeReview() {
+            const text = document.getElementById('reviewInput').value.trim();
+            if(!text) { alert('Please enter a review to analyze.'); return; }
+            if(text.length < 10) { alert('Please enter a longer review.'); return; }
+
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+
+            const gb=document.getElementById('gaugeBar'); if(gb) gb.style.strokeDashoffset=408.41;
+            ['gBar','fBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.width='0%'; });
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            document.getElementById('btnIcon').className = 'fas fa-circle-notch fa-spin';
+            document.getElementById('btnText').textContent = 'Analyzing...';
+
+            animateSteps();
+
+            try {
+                const res = await fetch('/analyze', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({review: text})
+                });
+                if(!res.ok) throw new Error('Server error: ' + res.status);
+                const data = await res.json();
+                if(data.error) { alert('Error: '+data.error); document.getElementById('loadingSection').classList.add('hidden'); return; }
+                setTimeout(()=> showResults(data), 1300);
+            } catch(err) {
+                alert('Cannot connect to server.\nMake sure Flask is running:\npython app.py\n\n'+err.message);
+                document.getElementById('loadingSection').classList.add('hidden');
+            } finally {
+                setTimeout(()=>{
+                    btn.disabled = false;
+                    document.getElementById('btnIcon').className = 'fas fa-magnifying-glass-chart';
+                    document.getElementById('btnText').textContent = 'Analyze Review';
+                }, 1500);
+            }
+        }
+
+        function showResults(data) {
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('hidden');
+
+            const vc = document.getElementById('verdictCard');
+            const ve = document.getElementById('vEmoji');
+            const vt = document.getElementById('vTitle');
+            const vd = document.getElementById('vDesc');
+            const vb = document.getElementById('vBadge');
+
+            vc.className = 'gcard verdict ' + (data.is_fake ? 'is-fake' : 'is-genuine');
+            ve.textContent = data.is_fake ? '🚨' : '✅';
+            vt.textContent = data.is_fake ? 'Fake Review Detected' : 'Genuine Review';
+            vd.textContent = data.is_fake
+                ? 'Our AI model has identified this review as likely fabricated or deceptive.'
+                : 'Our AI model has identified this review as likely authentic and trustworthy.';
+            vb.textContent = data.confidence + '% Confidence — ' + (data.is_fake ? 'Fake' : 'Genuine');
+
+            // Gauge
+            const circ = 2 * Math.PI * 65;
+            const off = circ - (data.confidence/100) * circ;
+            const bar = document.getElementById('gaugeBar');
+            const num = document.getElementById('gaugeNum');
+            bar.style.stroke = data.is_fake ? '#f87171' : '#34d399';
+            bar.style.filter = data.is_fake ? 'drop-shadow(0 0 8px rgba(248,113,113,0.5))' : 'drop-shadow(0 0 8px rgba(52,211,153,0.5))';
+            num.style.color = data.is_fake ? '#f87171' : '#34d399';
+            setTimeout(()=>{ bar.style.strokeDashoffset = off; animateNum(num, data.confidence, 1400); }, 300);
+
+            // Probability
+            setTimeout(()=>{
+                document.getElementById('gBar').style.width = data.real_probability+'%';
+                document.getElementById('fBar').style.width = data.fake_probability+'%';
+                document.getElementById('gPct').textContent = data.real_probability+'%';
+                document.getElementById('fPct').textContent = data.fake_probability+'%';
+            }, 500);
+
+            // Metrics
+            const a = data.analysis;
+            let sLabel='Neutral', sColor='ic-blue';
+            if(a.sentiment_polarity>0.5){sLabel='Very Positive';sColor='ic-green';}
+            else if(a.sentiment_polarity>0.1){sLabel='Positive';sColor='ic-green';}
+            else if(a.sentiment_polarity<-0.5){sLabel='Very Negative';sColor='ic-red';}
+            else if(a.sentiment_polarity<-0.1){sLabel='Negative';sColor='ic-red';}
+
+            let subL = a.sentiment_subjectivity>0.7?'Highly Subjective':a.sentiment_subjectivity>0.4?'Moderate':'Mostly Objective';
+
+            const metrics = [
+                {icon:'fa-font', color:'ic-blue', label:'Word Count', val:a.word_count},
+                {icon:'fa-exclamation', color:a.exclamation_marks>5?'ic-red':a.exclamation_marks>2?'ic-yellow':'ic-green', label:'Exclamation Marks', val:a.exclamation_marks},
+                {icon:'fa-triangle-exclamation', color:a.suspicious_words>3?'ic-red':a.suspicious_words>1?'ic-yellow':'ic-green', label:'Suspicious Words', val:a.suspicious_words},
+                {icon:'fa-briefcase', color:a.marketing_words>2?'ic-red':a.marketing_words>0?'ic-purple':'ic-green', label:'Marketing Words', val:a.marketing_words},
+                {icon:'fa-heart', color:sColor, label:'Sentiment', val:sLabel+' ('+a.sentiment_polarity+')'},
+                {icon:'fa-eye', color:'ic-blue', label:'Subjectivity', val:(a.sentiment_subjectivity*100).toFixed(0)+'% — '+subL},
+                {icon:'fa-crosshairs', color:'ic-green', label:'Specificity Score', val:a.specificity_score+' detail(s)'},
+                {icon:'fa-scale-balanced', color:'ic-yellow', label:'Hedging Words', val:a.hedging_words},
+                {icon:'fa-arrow-up', color:a.all_caps_words>3?'ic-red':a.all_caps_words>1?'ic-yellow':'ic-green', label:'ALL CAPS Words', val:a.all_caps_words},
+                {icon:'fa-fingerprint', color:'ic-purple', label:'Unique Word Ratio', val:(a.unique_word_ratio*100).toFixed(0)+'%'},
+                {icon:'fa-text-height', color:'ic-blue', label:'Capital Ratio', val:a.capital_letter_ratio+'%'},
+            ];
+
+            document.getElementById('metricsGrid').innerHTML = metrics.map((m,i) =>
+                `<div class="m-item" style="animation-delay:${0.04*i}s">
+                    <div class="m-icon ${m.color}"><i class="fas ${m.icon}"></i></div>
+                    <div class="m-info"><h4>${m.label}</h4><p>${m.val}</p></div>
+                </div>`
+            ).join('');
+
+            document.getElementById('resultsSection').scrollIntoView({behavior:'smooth', block:'start'});
+        }
+
+        // Events
+        document.addEventListener('DOMContentLoaded', () => {
+            const ta = document.getElementById('reviewInput');
+            ta.addEventListener('input', updateCounter);
+            ta.addEventListener('keydown', e => { if(e.ctrlKey && e.key==='Enter') analyzeReview(); });
+
+            // Navbar scroll
+            window.addEventListener('scroll', () => {
+                document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 30);
+            });
+
+            // Rotating placeholder
+            const phs = ['Paste a product review here...','Try an Amazon review...','Check if a review is genuine or fake...','Paste any review to analyze...'];
+            let pi = 0;
+            setInterval(()=>{ if(!ta.value) { pi=(pi+1)%phs.length; ta.placeholder=phs[pi]; } }, 3000);
+        });
+    </script>
+</body>
+</html>
