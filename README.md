@@ -40,7 +40,28 @@ Random Forest (200 trees)
 Gradient Boosting
 Soft Voting Classifier
 
-<img width="294" height="221" alt="image" src="https://github.com/user-attachments/assets/88630f28-02c5-4c03-aa9d-0882377d54be" />
+⚙️ Installation
+1️⃣ Clone the repository
+git clone https://github.com/YOUR_USERNAME/TrustLens-NLP.git
+cd TrustLens-NLP
+
+2️⃣ Install dependencies
+pip install flask scikit-learn nltk textblob pandas numpy scipy joblib
+
+3️⃣ Download NLTK data
+python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet')"
+
+<img width="1065" height="5724" alt="127 0 0 1_5000_ (1)" src="https://github.com/user-attachments/assets/e5f0d343-614e-437f-a442-630ab9d49c4a" />
+<img width="1065" height="5724" alt="127 0 0 1_5000_ (2)" src="https://github.com/user-attachments/assets/133bfd14-6620-4f4a-a224-d6025b33786b" />
+
+🔮 Future Improvements
+Transformer-based model (BERT)
+Real-world dataset integration
+Docker deployment
+AWS/GCP cloud hosting
+Admin analytics dashboard
+
+
 
 
 
